@@ -94,8 +94,8 @@ class FavoritesMixinTestCase(BaseFavoriteTestCase):
         alice = self.users['alice']
         chris = self.users['chris']
 
-        Favorite.objects.create_favorite(alice, self.animals['zebra'])
-        Favorite.objects.create_favorite(chris, self.animals['donkey'])
+        Favorite.objects.create_favorite(self.animals['zebra'], alice)
+        Favorite.objects.create_favorite(self.animals['donkey'], chris)
 
         zebra = Animal.objects.with_favorite_for(alice).get(name='zebra')
         self.assertEquals(zebra.favorite__favorite, 1)
