@@ -33,12 +33,15 @@ class FavoritesManagerMixin(object):
             extras = {
                 'select': {'favorite__favorite': favorite_sql},
                 }
-        else:
-            extras = {
-                'select': {'favorite__favorite': '0'}
-            }
+            if not all:
+                extras['where'] = ['favorite__favorite == 1']
 
-        if not all:
-            extras['where'] = ['favorite__favorite == 1']
+        else:
+            if not all:
+                return self.get_query_set().none()
+            else:
+                extras = {
+                    'select': {'favorite__favorite': '(SELECT 0)'}
+                }
 
         return self.get_query_set().extra(**extras)

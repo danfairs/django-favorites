@@ -116,7 +116,7 @@ class FavoritesMixinTestCase(BaseFavoriteTestCase):
         for animal in animals:
             self.assertEqual(0, animal.favorite__favorite)
         
-        favorite_animals = Animal.objects.with_favorite_for(alice, all=False).all()
+        favorite_animals = Animal.objects.with_favorite_for(anon, all=False).all()
         self.assertEquals(len(favorite_animals), 0)
 
 
