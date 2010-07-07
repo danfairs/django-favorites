@@ -1,7 +1,7 @@
 import unittest
 
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AnonymousUser, User
 
 from models import Favorite
 from managers import FavoritesManagerMixin
@@ -78,19 +78,23 @@ class Animal(models.Model):
         return self.name
 
 class FavoritesMixinTestCase(BaseFavoriteTestCase):
+
+    def setUp(self):
+        self.animals = {}
+        for a in ['zebra', 'donkey', 'horse']:
+            ani = Animal(name=a)
+            ani.save()
+            self.animals[a] = ani
+            
+    
     def testWithFavorites(self):
         """ Tests whether or not `with_favorite_for` works
         """
         alice = self.users['alice']
         chris = self.users['chris']
-        animals = {}
-        for a in ['zebra', 'donkey', 'horse']:
-            ani = Animal(name=a)
-            ani.save()
-            animals[a] = ani
 
-        Favorite.objects.create_favorite(alice, animals['zebra'])
-        Favorite.objects.create_favorite(chris, animals['donkey'])
+        Favorite.objects.create_favorite(alice, self.animals['zebra'])
+        Favorite.objects.create_favorite(chris, self.animals['donkey'])
 
         zebra = Animal.objects.with_favorite_for(alice).get(name='zebra')
         self.assertEquals(zebra.favorite__favorite, 1)
@@ -100,3 +104,19 @@ class FavoritesMixinTestCase(BaseFavoriteTestCase):
 
         favorite_animals = Animal.objects.with_favorite_for(alice, all=False).all()
         self.assertEquals(len(favorite_animals), 1)
+        
+    def testWithFavoritesAnon(self):
+        """ Passing an anonymous user should still work, but anon users
+        don't have favorites
+        """
+        anon = AnonymousUser()
+        animals = Animal.objects.with_favorite_for(anon)
+        self.assertEqual(3, len(animals))
+
+        for animal in animals:
+            self.assertEqual(0, animal.favorite__favorite)
+        
+        favorite_animals = Animal.objects.with_favorite_for(alice, all=False).all()
+        self.assertEquals(len(favorite_animals), 0)
+
+

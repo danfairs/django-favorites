@@ -12,24 +12,30 @@ class FavoritesManagerMixin(object):
         """ Adds a column favorite__favorite to the returned object, which
         indicates whether or not this item is a favorite for a user
         """
-        Favorite = models.get_model('favorites', 'Favorite')
-        content_type = ContentType.objects.get_for_model(self.model)
-        pk_field = "%s.%s" % (qn(self.model._meta.db_table),
-                              qn(self.model._meta.pk.column))
+        
+        if user.is_authenticated():
+            Favorite = models.get_model('favorites', 'Favorite')
+            content_type = ContentType.objects.get_for_model(self.model)
+            pk_field = "%s.%s" % (qn(self.model._meta.db_table),
+                                  qn(self.model._meta.pk.column))
 
-        favorite_sql = """(SELECT 1 FROM %(favorites_db_table)s 
-WHERE %(favorites_db_table)s.object_id = %(pk_field)s and
-      %(favorites_db_table)s.content_type_id = %(content_type)d and
-      %(favorites_db_table)s.user_id = %(user_id)d)
-""" % {'pk_field': pk_field, \
-           'db_table': qn(self.model._meta.db_table), \
-           'favorites_db_table': qn(Favorite._meta.db_table), \
-           'user_id': user.pk, \
-           'content_type': content_type.id, \
-           }
+            favorite_sql = """(SELECT 1 FROM %(favorites_db_table)s 
+    WHERE %(favorites_db_table)s.object_id = %(pk_field)s and
+          %(favorites_db_table)s.content_type_id = %(content_type)d and
+          %(favorites_db_table)s.user_id = %(user_id)d)
+    """ % {'pk_field': pk_field, \
+               'db_table': qn(self.model._meta.db_table), \
+               'favorites_db_table': qn(Favorite._meta.db_table), \
+               'user_id': user.pk, \
+               'content_type': content_type.id, \
+               }
 
-        extras = {
-            'select': {'favorite__favorite': favorite_sql},
+            extras = {
+                'select': {'favorite__favorite': favorite_sql},
+                }
+        else:
+            extras = {
+                'select': {'favorite__favorite': '0'}
             }
 
         if not all:
