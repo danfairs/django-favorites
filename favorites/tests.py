@@ -80,6 +80,7 @@ class Animal(models.Model):
 class FavoritesMixinTestCase(BaseFavoriteTestCase):
 
     def setUp(self):
+        super(FavoritesMixinTestCase, self).setUp()
         self.animals = {}
         for a in ['zebra', 'donkey', 'horse']:
             ani = Animal(name=a)
